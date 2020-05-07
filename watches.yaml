@@ -1,0 +1,5 @@
+---
+- version: v1alpha1
+  group: db.operator.com
+  kind: Db2
+  role: /opt/ansible/roles/db2

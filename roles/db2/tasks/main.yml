@@ -1,0 +1,72 @@
+---
+- name: Db2 deployment
+  k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: 'ftm-db2'
+        labels:
+          app: ftm-db2
+        namespace: '{{ meta.namespace }}'  
+      spec:
+        selector:
+          matchLabels:
+            app: ftm-db2
+        template:
+          metadata:
+            labels:
+              app: ftm-db2
+          spec:
+            initContainers:
+            - name: db2-dataset
+              image: ftm_dp_db2_dataset:3.2.3.0
+              volumeMounts:
+              - mountPath: /dbStore
+                name: dataset-pv
+            - name: db2-binary
+              image: ftm_dp_binary:3.2.3.0
+              volumeMounts:
+              - mountPath: /opt/IBM/ftm
+                name: ftm-db2-pv
+            containers:
+            - name: ftm-db2
+              image: ftm_dp_db2:3.2.3.0
+              env:
+              - name: DB_NAME
+                value: FTMDB
+              ports:
+                - containerPort: 50000
+              securityContext:
+                capabilities:
+                  add:
+                  - IPC_OWNER
+              volumeMounts:
+              - mountPath: /opt/IBM/ftm
+                name: ftm-db2-pv
+              - mountPath: /dbStore
+                name: dataset-pv
+            volumes:
+            - name: ftm-db2-pv
+              persistentVolumeClaim:
+                claimName: ftm-db2-pvc
+            - name: dataset-pv
+              persistentVolumeClaim:
+                claimName: dataset-pvc
+
+- name: Db2 Service
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: ftm-dp-db2-service
+        namespace: '{{ meta.namespace }}'
+      spec:
+        type: ClusterIP
+        selector:
+          app: ftm-db2
+        ports:
+        - name: "db2-port"
+          port: 50000
+          targetPort: 50000

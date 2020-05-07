@@ -1,0 +1,7 @@
+apiVersion: db.operator.com/v1alpha1
+kind: Db2
+metadata:
+  name: example-db2
+spec:
+  # Add fields here
+  size: 3
